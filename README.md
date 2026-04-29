@@ -1,7 +1,7 @@
 # Termosc - A real-time oscilloscope in the Windows Terminal
 
 This is just a super simple oscilloscope I wrote in a few days. It runs in the Windows Terminal, visualizing any and every audio playing on your computer in real time. 
-*insert video of Termosc working here*
+![demo](https://github.com/frixnipe/termosc/blob/master/example_assets/termosc_demo.gif "Demo")
 ### Why? 
 Because I felt like it. I wanted to make a simple oscilloscope. In fact, the actual idea came from [this Reddit post](https://www.reddit.com/r/unixporn/comments/1sd4p36/oc_terminal_oscilloscope_art/) showcasing a terminal oscilloscope for Linux.
 ### Features
