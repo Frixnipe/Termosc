@@ -7,8 +7,8 @@ Because I felt like it. I wanted to make a simple oscilloscope. In fact, the act
 ### Features
 Termosc features a built-in config menu to customize its color, speed and style. Pressing any button on the oscilloscope view opens it. There isn't a lot of options yet, but there are more to come!
 ### Updates
-I still want to add a bunch of features to this; the current version is basically just a prototype. But I'm planning on adding more styling and stuff because why not!
+I still want to add a bunch of features to this; the current version is basically just a prototype. So updates are guaranteed in the nearby future!
 ### Download
-You can download this from **Winget** (`winget install Termosc`) of from the [Releases page](https://github.com/Frixnipe/Termosc/releases).
+You can download this from **Winget** (`winget install frixnipe.termosc`) or from the [Releases page](https://github.com/Frixnipe/Termosc/releases).
 ### Support
-Nope, you can't support me! Or at least not yet. But would you want to throw your money at a stranger on the internet anyways?
+Nope, you can't support me! Or at least not yet. But why would you want to throw your money at a stranger on the internet anyways?
