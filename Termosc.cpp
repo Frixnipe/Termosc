@@ -314,62 +314,26 @@ void config() {
 			}
 
 			// style
-			if (sel == 2) {
-				setText(0, 7, 0xf, L"style:              ");
-			}
-			else {
-				setText(0, 7, 8, L"style:              ");
-			}
-			if (!style) {
-				setText(19, 7, 15, L"dotted  ");
-			}
-			else {
-				setText(19, 7, 8, L"dotted  ");
-			}
-			if (style == 1) {
-				setText(27, 7, 15, L"line  ");
-			}
-			else {
-				setText(27, 7, 8, L"line  ");
-			}
-			if (style == 2) {
-				setText(33, 7, 15, L"filled  ");
-			}
-			else {
-				setText(33, 7, 8, L"filled  ");
-			}
+			if (sel == 2) setText(0, 7, 0xf, L"style:              ");
+			else setText(0, 7, 8, L"style:              ");
+			if (!style) setText(19, 7, 15, L"dotted  ");
+			else setText(19, 7, 8, L"dotted  ");
+			if (style == 1) setText(27, 7, 15, L"line  ");
+			else setText(27, 7, 8, L"line  ");
+			if (style == 2) setText(33, 7, 15, L"filled  ");
+			else setText(33, 7, 8, L"filled  ");
 
 			// speed
-			if (sel == 3) {
-				setText(0, 9, 0xf, L"speed:              ");
-			}
-			else {
-				setText(0, 9, 8, L"speed:              ");
-			}
-			if (speed == 33) {
-				setText(19, 9, 15, L"30 FPS  ");
-			}
-			else {
-				setText(19, 9, 8, L"30 FPS  ");
-			}
-			if (speed == 16) {
-				setText(27, 9, 15, L"60 FPS  ");
-			}
-			else {
-				setText(27, 9, 8, L"60 FPS  ");
-			}
-			if (speed == 8) {
-				setText(35, 9, 15, L"120 FPS  ");
-			}
-			else {
-				setText(35, 9, 8, L"120 FPS  ");
-			}
-			if (speed == 1) {
-				setText(44, 9, 15, L"uncapped  ");
-			}
-			else {
-				setText(44, 9, 8, L"uncapped  ");
-			}
+			if (sel == 3) setText(0, 9, 0xf, L"speed:              ");
+			else setText(0, 9, 8, L"speed:              ");
+			if (speed == 33) setText(19, 9, 15, L"30 FPS  ");
+			else setText(19, 9, 8, L"30 FPS  ");
+			if (speed == 16) setText(27, 9, 15, L"60 FPS  ");
+			else setText(27, 9, 8, L"60 FPS  ");
+			if (speed == 8) setText(35, 9, 15, L"120 FPS  ");
+			else setText(35, 9, 8, L"120 FPS  ");
+			if (speed == 1) setText(44, 9, 15, L"uncapped  ");
+			else setText(44, 9, 8, L"uncapped  ");
 
 			// key instructions
 			setText(0, h - 1, 0xf, L"↑ ↓");
