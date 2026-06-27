@@ -9,6 +9,6 @@ Termosc features a built-in config menu to customize its color, speed and style.
 ### Updates
 I still want to add a bunch of features to this; the current version is basically just a prototype. So updates are guaranteed in the nearby future!
 ### Download
-You can download this from **Winget** (`winget install frixnipe.termosc`) or from the [Releases page](https://github.com/Frixnipe/Termosc/releases).
+You can download this from the [Releases page](https://github.com/Frixnipe/Termosc/releases). I plan on putting this on Winget too or something, but I haven't done anything towards it yet.
 ### Support
 Nope, you can't support me! Or at least not yet. But why would you want to throw your money at a stranger on the internet anyways?
