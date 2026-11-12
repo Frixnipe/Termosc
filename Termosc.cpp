@@ -7,6 +7,7 @@
 #include <mmdeviceapi.h>
 #include <audioclient.h>
 #include <vector>
+#include <string>
 
 // defining keypresses
 #define KEY_UP 72
@@ -18,15 +19,17 @@
 
 using namespace std;
 
+float amp = 1; // the amplification of the oscilloscope
+
 /*
 TODO:
-- color / glow effects n' stuff
+- gradients
+- (every color in gradient)
+- probably move the config over to a file because reconfiging every time is getting annoying
+- a buncha code optimizations that I am usually too lazy to do
+- config UI overhaul to comply with other CLI UIs
+- make oscilloscope() run on a forever loop in main() instead so that I can also use it from config() as a 'preview'
 - a 2D oscilloscope maybeeee????????
-
-CONFIGS
-- fade amount
-- color of each fade
-- reactiveness
 */
 
 // set a handle to the console window for colors and shit
@@ -34,10 +37,10 @@ HANDLE hc = GetStdHandle(STD_OUTPUT_HANDLE);
 
 // used for getting console size
 CONSOLE_SCREEN_BUFFER_INFO csbi;
-void getWindowSize(int& rows, int& columns) {
+void getWindowSize(int& w, int& h) {
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-	rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+	w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+	h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
 int width = 0, height = 0;
@@ -61,15 +64,15 @@ void updateWindowSize(int w, int h) {
 }
 
 void setPixel(int x, int y, int col) {
-	if (x < 0 || x >= width || y < 0 || y > height * 2) return; // don't write outside of the visible area
+	if (x < 0 || x >= width || y < 0 || y >= height * 2) return; // don't write outside of the visible area
 	t[y / 2 * width + x].Char.UnicodeChar = L'▀';
 	if (y % 2) {
 		// bottom half; set background color
-		t[y / 2 * width + x].Attributes = (t[y / 2 * width + x].Attributes & 0xFF0F) | ((col << 4) & 0xF0);
+		t[y / 2 * width + x].Attributes = (t[y / 2 * width + x].Attributes & 0x0F) | ((col << 4) & 0xF0);
 	}
 	else {
 		// top half; set text color
-		t[y / 2 * width + x].Attributes = (t[y / 2 * width + x].Attributes & 0xFFF0) | (col & 0x0F);
+		t[y / 2 * width + x].Attributes = (t[y / 2 * width + x].Attributes & 0xF0) | (col & 0x0F);
 	}
 }
 
@@ -79,11 +82,6 @@ void setText(int x, int y, int col, wstring txt) {
 		t[y * width + x + i].Char.UnicodeChar = txt[i];
 		t[y * width + x + i].Attributes = col;
 	}
-}
-
-// output a number of spaces (useful for centering stuff)
-void spaces(int x) {
-	for (int i = 0; i < x; i++) wprintf(L" ");
 }
 
 void oscilloscope() {
@@ -108,10 +106,10 @@ void oscilloscope() {
 	pAudioClient->GetService(__uuidof(IAudioCaptureClient), (void**)&pCaptureClient);
 	pAudioClient->Start();
 
-	int w, h; // actual width and height because yes
+	static int w, h; // actual width and height because yes
 	while (1) {
 		// update window size
-		getWindowSize(h, w); // curse my school project I copied this function from, and the fact that I had to debug for 3 hours to find out that the parameters inside this are swapped
+		getWindowSize(w, h);
 		updateWindowSize(w, h);
 
 		// clear CHAR_INFO
@@ -145,7 +143,7 @@ void oscilloscope() {
 				/* CLANKER CODE END */
 
 				// clamp sample to window height
-				int y = static_cast<int>(((sample + 1.0f) / 2.0f) * (h * 2 - 1));
+				int y = static_cast<int>(((sample + 1.0f) / 2.0f) * (h * 2 * amp - 1));
 
 				/*
 				this is where the different "styles" are defined
@@ -154,23 +152,23 @@ void oscilloscope() {
 				switch (style) {
 				case 0:
 					// dotted style
-					setPixel(x, y, osc_color);
+					setPixel(x, y - h * (amp - 1), osc_color);
 					break;
 				case 1:
 					// line style
 					static int yl;
 					if (!x) yl = y; // y position of the last column
 					for (int v = min(y, yl); v <= max(y, yl); v++) {
-						setPixel(x, v, osc_color);
+						// setPixel(x, v * 3 - h * 2, osc_color);
+						setPixel(x, v - h * (amp - 1), osc_color);
 					}
 					yl = y;
 					break;
 				case 2:
 					// filled style
-					for (int v = min(y, h); v <= max(y, h); v++) {
-						setPixel(x, v, osc_color);
+					for (int v = min(y, h * amp - 1); v <= max(y, h * amp - 1); v++) {
+						setPixel(x, v - h * (amp - 1), osc_color);
 					}
-					break;
 				}
 			}
 			pCaptureClient->ReleaseBuffer(fn);
@@ -197,18 +195,14 @@ void oscilloscope() {
 }
 
 void config() {
-	int sel = 0; // selected category
+	static int sel = 0; // selected category
+	static int w, h; // window width & height
 	while (1) {
-		// system("pause");
-		int w, h;
-
-		// my god... i need to implement refreshing this page with the vector array too
-		// *sigh*
 		// clear the vector array
 		fill(t.begin(), t.end(), CHAR_INFO{ L' ', 0 });
 
-		// get the window size
-		getWindowSize(h, w);
+		// update window size
+		getWindowSize(w, h);
 		updateWindowSize(w, h);
 
 		// get inputs n' stuff
@@ -218,7 +212,7 @@ void config() {
 				if (sel > 0) sel--;
 				break;
 			case KEY_DOWN:
-				if (sel < 3) sel++;
+				if (sel < 4) sel++;
 				break;
 			case KEY_LEFT:
 				switch (sel) {
@@ -235,6 +229,10 @@ void config() {
 					if (speed == 1) speed = 8;
 					else if (speed == 8) speed = 16;
 					else if (speed == 16) speed = 33;
+					break;
+				case 4:
+					if (amp > 10) amp -= 1;
+					else if (amp > 0.1) amp -= 0.1;
 					break;
 				}
 				break;
@@ -254,6 +252,10 @@ void config() {
 					else if (speed == 16) speed = 8;
 					else if (speed == 8) speed = 1;
 					break;
+				case 4:
+					if (amp < 10) amp += 0.1;
+					else if (amp < 99) amp += 1;
+					break;
 				}
 				break;
 			case ENTER:
@@ -269,7 +271,6 @@ void config() {
 		if (w < 55 || h < 10) {
 			// system("cls");
 			setText(0, 0, 0xf, L"The window is too small to display the config!");
-			// wprintf(L"The window is too small to display the config!");
 		}
 		else {
 			// title
@@ -279,61 +280,38 @@ void config() {
 			}
 			setText((w - 6) / 2, 0, 0xf0, L"CONFIG");
 
-			// oscilloscope color
-			if (!sel) {
-				setText(0, 3, 0xf, L"oscilloscope color: ");
-			}
-			else {
-				setText(0, 3, 8, L"oscilloscope color: ");
-			}
+			// oscilloscope & background colors
+			setText(0, 3, (!sel) ? 0xf : 8, L"oscilloscope color: ");
+			setText(0, 5, (sel == 1) ? 0xf : 8, L"background color:");
 			for (unsigned short i = 0; i < 16; i++) {
 				if (osc_color == i) {
 					if (osc_color) setText(20 + i * 2, 3, i, L"█ ");
-					else {
-						setText(20 + i * 2, 3, 15, L"▒ ");
-					}
+					else setText(20 + i * 2, 3, 0xf, L"▒ ");
 				}
 				else setText(20 + i * 2, 3, i, L"░ ");
-			}
-
-			// background color
-			if (sel == 1) {
-				setText(0, 5, 0xf, L"background color:   ");
-			}
-			else {
-				setText(0, 5, 8, L"background color:   ");
-			}
-			for (unsigned short i = 0; i < 16; i++) {
 				if (bg_color == i) {
 					if (bg_color) setText(20 + i * 2, 5, i, L"█ ");
-					else {
-						setText(20 + i * 2, 5, 15, L"▒ ");
-					}
+					else setText(20 + i * 2, 5, 0xf, L"▒ ");
 				}
 				else setText(20 + i * 2, 5, i, L"░ ");
 			}
 
 			// style
-			if (sel == 2) setText(0, 7, 0xf, L"style:              ");
-			else setText(0, 7, 8, L"style:              ");
-			if (!style) setText(19, 7, 15, L"dotted  ");
-			else setText(19, 7, 8, L"dotted  ");
-			if (style == 1) setText(27, 7, 15, L"line  ");
-			else setText(27, 7, 8, L"line  ");
-			if (style == 2) setText(33, 7, 15, L"filled  ");
-			else setText(33, 7, 8, L"filled  ");
+			setText(0, 7, (sel == 2) ? 0xf : 8, L"style:");
+			setText(19, 7, (!style) ? 15 : 8, L"dotted");
+			setText(27, 7, (style == 1) ? 15 : 8, L"line");
+			setText(33, 7, (style == 2) ? 15 : 8, L"filled");
 
 			// speed
-			if (sel == 3) setText(0, 9, 0xf, L"speed:              ");
-			else setText(0, 9, 8, L"speed:              ");
-			if (speed == 33) setText(19, 9, 15, L"30 FPS  ");
-			else setText(19, 9, 8, L"30 FPS  ");
-			if (speed == 16) setText(27, 9, 15, L"60 FPS  ");
-			else setText(27, 9, 8, L"60 FPS  ");
-			if (speed == 8) setText(35, 9, 15, L"120 FPS  ");
-			else setText(35, 9, 8, L"120 FPS  ");
-			if (speed == 1) setText(44, 9, 15, L"uncapped  ");
-			else setText(44, 9, 8, L"uncapped  ");
+			setText(0, 9, (sel == 3) ? 0xf : 8, L"speed:");
+			setText(19, 9, (speed == 33) ? 0xf : 8, L"30 FPS");
+			setText(27, 9, (speed == 16) ? 0xf : 8, L"60 FPS");
+			setText(35, 9, (speed == 8) ? 15 : 8, L"120 FPS");
+			setText(44, 9, (speed == 1) ? 15 : 8, L"uncapped");
+
+			// amplitude
+			setText(0, 11, (sel == 4) ? 0xf : 8, L"amplitude:");
+			setText(19, 11, 0xf, (floor(amp / 10)) ? to_wstring(amp).substr(0, 2) : to_wstring(amp).substr(0, 3));
 
 			// key instructions
 			setText(0, h - 1, 0xf, L"↑ ↓");
@@ -350,7 +328,7 @@ void config() {
 		SMALL_RECT writeRegion = { 0, 0, w - 1, h - 1 };
 		WriteConsoleOutputW(hc, t.data(), bufferSize, bufferCoord, &writeRegion);
 
-		Sleep(33);
+		Sleep(16);
 	}
 }
 
@@ -367,13 +345,6 @@ int main() {
 		oscilloscope();
 		config();
 	}
-
-	// output key values because yes
-	/*
-	while (1) {
-		if (_kbhit()) cout << _getch() << "\n";
-	}
-	*/
 
 	return 0;
 }
